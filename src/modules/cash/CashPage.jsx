@@ -7,10 +7,30 @@ export default function CashPage() {
   const [movementAmount, setMovementAmount] = useState('')
   const [movementDescription, setMovementDescription] = useState('')
   const [movementType, setMovementType] = useState('ingreso')
+  const [message, setMessage] = useState('')
+  const [error, setError] = useState('')
 
   async function loadSummary() {
     const data = await window.tpv.cash.getSummary()
     setSummary(data)
+  }
+
+  function showMessage(text) {
+    setError('')
+    setMessage(text)
+
+    setTimeout(() => {
+      setMessage('')
+    }, 3000)
+  }
+
+  function showError(text) {
+    setMessage('')
+    setError(text)
+
+    setTimeout(() => {
+      setError('')
+    }, 4000)
   }
 
   useEffect(() => {
@@ -24,9 +44,9 @@ export default function CashPage() {
       await window.tpv.cash.open(Number(openingAmount || 0))
       setOpeningAmount('')
       await loadSummary()
-      alert('Caja abierta correctamente')
+      showMessage('Caja abierta correctamente')
     } catch (error) {
-      alert(error.message || 'Error al abrir caja')
+      showError(error.message || 'Error al abrir caja')
     }
   }
 
@@ -37,9 +57,9 @@ export default function CashPage() {
       await window.tpv.cash.close(Number(closingAmount || 0))
       setClosingAmount('')
       await loadSummary()
-      alert('Caja cerrada correctamente')
+      showMessage('Caja cerrada correctamente')
     } catch (error) {
-      alert(error.message || 'Error al cerrar caja')
+      showError(error.message || 'Error al cerrar caja')
     }
   }
 
@@ -48,7 +68,7 @@ export default function CashPage() {
 
     try {
       if (!movementAmount) {
-        alert('Ingresá un monto')
+        showError('Ingresá un monto')
         return
       }
 
@@ -64,9 +84,9 @@ export default function CashPage() {
 
       await loadSummary()
 
-      alert('Movimiento registrado')
+      showMessage('Movimiento registrado correctamente')
     } catch (error) {
-      alert(error.message || 'Error al registrar movimiento')
+      showError(error.message || 'Error al registrar movimiento')
     }
   }
 
@@ -92,6 +112,18 @@ export default function CashPage() {
           {summary.isOpen ? 'Caja abierta' : 'Caja cerrada'}
         </span>
       </div>
+
+      {message && (
+        <div className="app-message success">
+          {message}
+        </div>
+      )}
+
+      {error && (
+        <div className="app-message error">
+          {error}
+        </div>
+      )}
 
       {!summary.isOpen ? (
         <div className="panel cash-form-panel">
