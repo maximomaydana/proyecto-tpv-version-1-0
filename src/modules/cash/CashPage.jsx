@@ -1,5 +1,13 @@
 import { useEffect, useState } from 'react'
 
+function formatCurrency(value) {
+  return Number(value || 0).toLocaleString('es-AR')
+}
+
+function onlyNumbers(value) {
+  return value.replace(/[^0-9]/g, '')
+}
+
 export default function CashPage() {
   const [summary, setSummary] = useState(null)
   const [openingAmount, setOpeningAmount] = useState('')
@@ -99,13 +107,14 @@ export default function CashPage() {
   }
 
   const totals = summary.totals
+  const closingDifference = Number(closingAmount || 0) - Number(totals.expected_amount || 0)
 
   return (
     <div className="page">
       <div className="page-header">
         <div>
           <h2>Caja</h2>
-          <p>Apertura, movimientos y cierre de caja.</p>
+          <p>Apertura, movimientos, ventas por método de pago y cierre de caja.</p>
         </div>
 
         <span className={`cash-status ${summary.isOpen ? 'open' : 'closed'}`}>
@@ -136,7 +145,7 @@ export default function CashPage() {
               <input
                 inputMode="numeric"
                 value={openingAmount}
-                onChange={(event) => setOpeningAmount(event.target.value)}
+                onChange={(event) => setOpeningAmount(onlyNumbers(event.target.value))}
                 placeholder="0"
               />
             </label>
@@ -151,45 +160,90 @@ export default function CashPage() {
           <div className="stats-grid">
             <article className="stat-card">
               <span>Monto inicial</span>
-              <strong>${totals.opening_amount.toLocaleString('es-AR')}</strong>
+              <strong>${formatCurrency(totals.opening_amount)}</strong>
             </article>
 
             <article className="stat-card">
-              <span>Ventas efectivo</span>
-              <strong>${totals.efectivo.toLocaleString('es-AR')}</strong>
+              <span>Ventas en efectivo</span>
+              <strong>${formatCurrency(totals.efectivo)}</strong>
             </article>
 
             <article className="stat-card">
               <span>Transferencias</span>
-              <strong>${totals.transferencia.toLocaleString('es-AR')}</strong>
+              <strong>${formatCurrency(totals.transferencia)}</strong>
             </article>
 
             <article className="stat-card">
               <span>Tarjeta</span>
-              <strong>${totals.tarjeta.toLocaleString('es-AR')}</strong>
+              <strong>${formatCurrency(totals.tarjeta)}</strong>
+            </article>
+
+            <article className="stat-card">
+              <span>Mercado Pago</span>
+              <strong>${formatCurrency(totals.mercado_pago)}</strong>
             </article>
           </div>
 
           <div className="stats-grid">
             <article className="stat-card">
               <span>Ingresos manuales</span>
-              <strong>${totals.ingresos.toLocaleString('es-AR')}</strong>
+              <strong>${formatCurrency(totals.ingresos)}</strong>
             </article>
 
             <article className="stat-card">
               <span>Egresos manuales</span>
-              <strong>${totals.egresos.toLocaleString('es-AR')}</strong>
+              <strong>${formatCurrency(totals.egresos)}</strong>
             </article>
 
             <article className="stat-card">
               <span>Ventas totales</span>
-              <strong>${totals.total_sales.toLocaleString('es-AR')}</strong>
+              <strong>${formatCurrency(totals.total_sales)}</strong>
             </article>
 
             <article className="stat-card">
               <span>Efectivo esperado</span>
-              <strong>${totals.expected_amount.toLocaleString('es-AR')}</strong>
+              <strong>${formatCurrency(totals.expected_amount)}</strong>
             </article>
+          </div>
+
+          <div className="panel">
+            <h3>Resumen de caja actual</h3>
+
+            <table>
+              <thead>
+                <tr>
+                  <th>Concepto</th>
+                  <th>Monto</th>
+                  <th>Detalle</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <tr>
+                  <td>Ventas totales</td>
+                  <td>${formatCurrency(totals.total_sales)}</td>
+                  <td>Suma de efectivo, transferencia, tarjeta y Mercado Pago.</td>
+                </tr>
+
+                <tr>
+                  <td>Efectivo esperado</td>
+                  <td>${formatCurrency(totals.expected_amount)}</td>
+                  <td>Monto inicial + ventas en efectivo + ingresos - egresos.</td>
+                </tr>
+
+                <tr>
+                  <td>Ventas no efectivo</td>
+                  <td>
+                    ${formatCurrency(
+                      Number(totals.transferencia || 0) +
+                      Number(totals.tarjeta || 0) +
+                      Number(totals.mercado_pago || 0)
+                    )}
+                  </td>
+                  <td>Transferencia, tarjeta y Mercado Pago no suman al efectivo esperado.</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
 
           <div className="cash-grid">
@@ -214,7 +268,7 @@ export default function CashPage() {
                   <input
                     inputMode="numeric"
                     value={movementAmount}
-                    onChange={(event) => setMovementAmount(event.target.value)}
+                    onChange={(event) => setMovementAmount(onlyNumbers(event.target.value))}
                     placeholder="0"
                   />
                 </label>
@@ -246,15 +300,22 @@ export default function CashPage() {
                   <input
                     inputMode="numeric"
                     value={closingAmount}
-                    onChange={(event) => setClosingAmount(event.target.value)}
+                    onChange={(event) => setClosingAmount(onlyNumbers(event.target.value))}
                     placeholder="0"
                   />
                 </label>
 
                 <div className="cash-expected-box">
                   <span>Efectivo esperado</span>
-                  <strong>${totals.expected_amount.toLocaleString('es-AR')}</strong>
+                  <strong>${formatCurrency(totals.expected_amount)}</strong>
                 </div>
+
+                {closingAmount && (
+                  <div className="cash-expected-box">
+                    <span>Diferencia estimada</span>
+                    <strong>${formatCurrency(closingDifference)}</strong>
+                  </div>
+                )}
 
                 <button className="btn btn-primary" type="submit">
                   Cerrar caja
