@@ -23,6 +23,7 @@ export default function SalesPage() {
   const [search, setSearch] = useState('')
   const [paymentMethod, setPaymentMethod] = useState('')
   const [discount, setDiscount] = useState('')
+  const [lastSaleReceipt, setLastSaleReceipt] = useState(null)
 
   async function loadData() {
     const productsData = await window.tpv.products.getAll()
@@ -141,6 +142,14 @@ export default function SalesPage() {
         return
       }
 
+      const soldItems = cart.map((item) => ({
+        id: item.id,
+        name: item.name,
+        quantity: item.quantity,
+        unit_price: Number(item.sale_price),
+        subtotal: Number(item.sale_price) * Number(item.quantity)
+      }))
+
       const sale = {
         payment_method: paymentMethod,
         discount: discountValue,
@@ -150,11 +159,17 @@ export default function SalesPage() {
         }))
       }
 
-      await window.tpv.sales.create(sale)
+      const createdSale = await window.tpv.sales.create(sale)
 
-      alert(
-        `Venta realizada correctamente\n\nTotal: $${formatCurrency(finalTotal)}\nMétodo: ${getPaymentMethodLabel(paymentMethod)}`
-      )
+      setLastSaleReceipt({
+        id: createdSale.id,
+        created_at: new Date().toISOString(),
+        payment_method: paymentMethod,
+        subtotal,
+        discount: discountValue,
+        total: createdSale.total ?? finalTotal,
+        items: soldItems
+      })
 
       setCart([])
       setPaymentMethod('')
@@ -176,6 +191,69 @@ export default function SalesPage() {
           <p>Venta rápida con productos reales y descuento automático de stock.</p>
         </div>
       </div>
+
+      {lastSaleReceipt && (
+        <div className="panel">
+          <div className="page-header">
+            <div>
+              <h3>Venta realizada correctamente</h3>
+              <p>
+                Ticket #{lastSaleReceipt.id} -{' '}
+                {new Date(lastSaleReceipt.created_at).toLocaleString('es-AR')}
+              </p>
+            </div>
+
+            <button
+              className="btn"
+              onClick={() => setLastSaleReceipt(null)}
+            >
+              Cerrar ticket
+            </button>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Precio unitario</th>
+                <th>Subtotal</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {lastSaleReceipt.items.map((item) => (
+                <tr key={item.id}>
+                  <td>{item.name}</td>
+                  <td>{item.quantity}</td>
+                  <td>${formatCurrency(item.unit_price)}</td>
+                  <td>${formatCurrency(item.subtotal)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <div className="cart-total">
+            <span>Método de pago</span>
+            <strong>{getPaymentMethodLabel(lastSaleReceipt.payment_method)}</strong>
+          </div>
+
+          <div className="cart-total">
+            <span>Subtotal</span>
+            <strong>${formatCurrency(lastSaleReceipt.subtotal)}</strong>
+          </div>
+
+          <div className="cart-total">
+            <span>Descuento</span>
+            <strong>${formatCurrency(lastSaleReceipt.discount)}</strong>
+          </div>
+
+          <div className="cart-total final">
+            <span>Total cobrado</span>
+            <strong>${formatCurrency(lastSaleReceipt.total)}</strong>
+          </div>
+        </div>
+      )}
 
       <div className="sales-layout">
         <section className="panel">
@@ -219,9 +297,7 @@ export default function SalesPage() {
                 <div className="cart-item" key={item.id}>
                   <div>
                     <strong>{item.name}</strong>
-                    <small>
-                      ${formatCurrency(item.sale_price)} c/u
-                    </small>
+                    <small>${formatCurrency(item.sale_price)} c/u</small>
                   </div>
 
                   <div className="quantity-controls">
