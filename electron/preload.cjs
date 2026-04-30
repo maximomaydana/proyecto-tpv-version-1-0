@@ -6,7 +6,9 @@ contextBridge.exposeInMainWorld('tpv', {
 
   products: {
     getAll: () => ipcRenderer.invoke('products:getAll'),
-    create: (product) => ipcRenderer.invoke('products:create', product)
+    create: (product) => ipcRenderer.invoke('products:create', product),
+    update: (product) => ipcRenderer.invoke('products:update', product),
+    deactivate: (productId) => ipcRenderer.invoke('products:deactivate', productId)
   },
 
   sales: {
