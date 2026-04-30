@@ -1,5 +1,21 @@
 import { useEffect, useMemo, useState } from 'react'
 
+const PAYMENT_METHODS = [
+  { value: 'efectivo', label: 'Efectivo' },
+  { value: 'transferencia', label: 'Transferencia' },
+  { value: 'tarjeta', label: 'Tarjeta' },
+  { value: 'mercado_pago', label: 'Mercado Pago' }
+]
+
+function formatCurrency(value) {
+  return Number(value || 0).toLocaleString('es-AR')
+}
+
+function getPaymentMethodLabel(value) {
+  const paymentMethod = PAYMENT_METHODS.find((method) => method.value === value)
+  return paymentMethod ? paymentMethod.label : value || '-'
+}
+
 export default function SalesPage() {
   const [products, setProducts] = useState([])
   const [sales, setSales] = useState([])
@@ -37,7 +53,13 @@ export default function SalesPage() {
     return acc + Number(item.sale_price) * Number(item.quantity)
   }, 0)
 
-  const finalTotal = Math.max(subtotal - Number(discount || 0), 0)
+  const discountValue = Math.max(Number(discount || 0), 0)
+  const finalTotal = Math.max(subtotal - discountValue, 0)
+
+  function handleDiscountChange(event) {
+    const value = event.target.value.replace(/[^0-9]/g, '')
+    setDiscount(value)
+  }
 
   function addToCart(product) {
     if (product.stock <= 0) {
@@ -121,7 +143,7 @@ export default function SalesPage() {
 
       const sale = {
         payment_method: paymentMethod,
-        discount: Number(discount || 0),
+        discount: discountValue,
         items: cart.map((item) => ({
           product_id: item.id,
           quantity: item.quantity
@@ -130,7 +152,9 @@ export default function SalesPage() {
 
       await window.tpv.sales.create(sale)
 
-      alert('Venta realizada correctamente')
+      alert(
+        `Venta realizada correctamente\n\nTotal: $${formatCurrency(finalTotal)}\nMétodo: ${getPaymentMethodLabel(paymentMethod)}`
+      )
 
       setCart([])
       setPaymentMethod('')
@@ -174,7 +198,7 @@ export default function SalesPage() {
                   disabled={product.stock <= 0}
                 >
                   <strong>{product.name}</strong>
-                  <span>${Number(product.sale_price).toLocaleString('es-AR')}</span>
+                  <span>${formatCurrency(product.sale_price)}</span>
                   <small>Stock: {product.stock}</small>
                 </button>
               ))
@@ -196,7 +220,7 @@ export default function SalesPage() {
                   <div>
                     <strong>{item.name}</strong>
                     <small>
-                      ${Number(item.sale_price).toLocaleString('es-AR')} c/u
+                      ${formatCurrency(item.sale_price)} c/u
                     </small>
                   </div>
 
@@ -221,7 +245,7 @@ export default function SalesPage() {
             Descuento
             <input
               value={discount}
-              onChange={(event) => setDiscount(event.target.value)}
+              onChange={handleDiscountChange}
               inputMode="numeric"
               placeholder="0"
             />
@@ -229,12 +253,12 @@ export default function SalesPage() {
 
           <div className="cart-total">
             <span>Subtotal</span>
-            <strong>${subtotal.toLocaleString('es-AR')}</strong>
+            <strong>${formatCurrency(subtotal)}</strong>
           </div>
 
           <div className="cart-total final">
             <span>Total</span>
-            <strong>${finalTotal.toLocaleString('es-AR')}</strong>
+            <strong>${formatCurrency(finalTotal)}</strong>
           </div>
 
           <select
@@ -242,14 +266,16 @@ export default function SalesPage() {
             onChange={(event) => setPaymentMethod(event.target.value)}
           >
             <option value="">Método de pago</option>
-            <option value="efectivo">Efectivo</option>
-            <option value="transferencia">Transferencia</option>
-            <option value="tarjeta">Tarjeta</option>
+            {PAYMENT_METHODS.map((method) => (
+              <option key={method.value} value={method.value}>
+                {method.label}
+              </option>
+            ))}
           </select>
 
           <button
             className="btn btn-primary"
-            disabled={cart.length === 0}
+            disabled={cart.length === 0 || !paymentMethod}
             onClick={confirmSale}
           >
             Cobrar
@@ -281,9 +307,9 @@ export default function SalesPage() {
                 <tr key={sale.id}>
                   <td>#{sale.id}</td>
                   <td>{new Date(sale.created_at).toLocaleString('es-AR')}</td>
-                  <td>{sale.payment_method}</td>
+                  <td>{getPaymentMethodLabel(sale.payment_method)}</td>
                   <td>{sale.items_count}</td>
-                  <td>${Number(sale.total).toLocaleString('es-AR')}</td>
+                  <td>${formatCurrency(sale.total)}</td>
                 </tr>
               ))
             )}
