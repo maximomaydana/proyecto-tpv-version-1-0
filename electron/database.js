@@ -406,3 +406,41 @@ export function getSales() {
     LIMIT 20
   `).all()
 }
+
+export function getDashboardStats() {
+  const todaySales = db.prepare(`
+    SELECT
+      COUNT(*) AS sales_count,
+      COALESCE(SUM(total), 0) AS total_sales
+    FROM sales
+    WHERE DATE(created_at) = DATE('now', 'localtime')
+  `).get()
+
+  const lowStock = db.prepare(`
+    SELECT COUNT(*) AS count
+    FROM products
+    WHERE active = 1
+    AND stock <= min_stock
+  `).get()
+
+  const latestSales = db.prepare(`
+    SELECT
+      id,
+      total,
+      payment_method,
+      created_at
+    FROM sales
+    ORDER BY id DESC
+    LIMIT 5
+  `).all()
+
+  const openCash = getOpenCashSession()
+
+  return {
+    sales_count: Number(todaySales.sales_count || 0),
+    total_sales: Number(todaySales.total_sales || 0),
+    low_stock_count: Number(lowStock.count || 0),
+    cash_is_open: Boolean(openCash),
+    latest_sales: latestSales
+  }
+}

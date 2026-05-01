@@ -553,3 +553,26 @@ input::-webkit-inner-spin-button {
 input[type='number'] {
   appearance: textfield;
 }
+
+.topbar-cash-pill {
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.topbar-cash-pill.open {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.topbar-cash-pill.closed {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.dashboard-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}

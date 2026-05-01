@@ -8,6 +8,7 @@ import {
   createSale,
   getSales,
   getCashSummary,
+  getDashboardStats,
   openCashSession,
   closeCashSession,
   createCashMovement
@@ -24,6 +25,8 @@ function createWindow() {
     height: 800,
     minWidth: 1100,
     minHeight: 700,
+    show: false,
+    autoHideMenuBar: true,
     backgroundColor: '#f6f7fb',
     title: 'TPV Modular Desktop',
     webPreferences: {
@@ -31,6 +34,19 @@ function createWindow() {
       contextIsolation: true,
       nodeIntegration: false
     }
+  })
+
+  mainWindow.once('ready-to-show', () => {
+  mainWindow.show()
+  mainWindow.focus()
+  })
+
+mainWindow.on('restore', () => {
+  mainWindow.focus()
+  })
+
+mainWindow.on('show', () => {
+  mainWindow.focus()
   })
 
   if (isDev) {
@@ -71,6 +87,10 @@ function registerIpcHandlers() {
 
   ipcMain.handle('cash:createMovement', (_event, movement) => {
     return createCashMovement(movement)
+  })
+
+  ipcMain.handle('dashboard:getStats', () => {
+  return getDashboardStats()
   })
 }
 

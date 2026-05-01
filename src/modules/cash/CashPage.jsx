@@ -24,7 +24,8 @@ export default function CashPage() {
       await window.tpv.cash.open(Number(openingAmount || 0))
       setOpeningAmount('')
       await loadSummary()
-      alert('Caja abierta correctamente')
+      window.dispatchEvent(new Event('cash-updated'))
+      showMessage('Caja abierta correctamente')
     } catch (error) {
       alert(error.message || 'Error al abrir caja')
     }
@@ -37,7 +38,8 @@ export default function CashPage() {
       await window.tpv.cash.close(Number(closingAmount || 0))
       setClosingAmount('')
       await loadSummary()
-      alert('Caja cerrada correctamente')
+      window.dispatchEvent(new Event('cash-updated'))
+      showMessage('Caja cerrada correctamente')
     } catch (error) {
       alert(error.message || 'Error al cerrar caja')
     }
@@ -63,8 +65,9 @@ export default function CashPage() {
       setMovementType('ingreso')
 
       await loadSummary()
+      window.dispatchEvent(new Event('cash-updated'))
 
-      alert('Movimiento registrado')
+      showMessage('Movimiento registrado correctamente')
     } catch (error) {
       alert(error.message || 'Error al registrar movimiento')
     }

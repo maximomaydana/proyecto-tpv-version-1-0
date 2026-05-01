@@ -4,6 +4,10 @@ contextBridge.exposeInMainWorld('tpv', {
   appName: 'TPV Modular Desktop',
   version: '0.1.0',
 
+  dashboard: {
+  getStats: () => ipcRenderer.invoke('dashboard:getStats')
+  },
+
   products: {
     getAll: () => ipcRenderer.invoke('products:getAll'),
     create: (product) => ipcRenderer.invoke('products:create', product)

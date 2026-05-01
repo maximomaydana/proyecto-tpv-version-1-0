@@ -28,7 +28,7 @@ export default function App() {
   }
 
   const pages = {
-    dashboard: <DashboardPage />,
+    dashboard: <DashboardPage onNavigate={setActivePage} />,
     products: <ProductsPage />,
     sales: <SalesPage />,
     cash: <CashPage />,

@@ -5,12 +5,18 @@ export default function AppLayout({ business, activePage, onNavigate, onLogout, 
   return (
     <div className="app-shell">
       <Sidebar activePage={activePage} onNavigate={onNavigate} />
+
       <main className="main-content">
-        <Topbar business={business} onLogout={onLogout} />
+        <Topbar
+          business={business}
+          activePage={activePage}
+          onLogout={onLogout}
+        />
+
         <section className="page-content">
           {children}
         </section>
       </main>
     </div>
   )
-}
+  }
