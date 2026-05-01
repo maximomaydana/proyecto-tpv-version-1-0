@@ -5,6 +5,8 @@ import {
   initDatabase,
   getProducts,
   createProduct,
+  updateProduct,
+  deactivateProduct,
   createSale,
   getSales,
   getCashSummary,
@@ -63,6 +65,14 @@ function registerIpcHandlers() {
 
   ipcMain.handle('products:create', (_event, product) => {
     return createProduct(product)
+  })
+
+  ipcMain.handle('products:update', (_event, product) => {
+    return updateProduct(product)
+  })
+
+  ipcMain.handle('products:deactivate', (_event, productId) => {
+    return deactivateProduct(productId)
   })
 
   ipcMain.handle('sales:create', (_event, sale) => {

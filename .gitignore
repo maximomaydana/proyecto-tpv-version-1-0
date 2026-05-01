@@ -1,1 +1,9 @@
-node_modules
+node_modules/
+dist/
+dist-installer/
+build/
+.env
+.DS_Store
+*.log
+npm-debug.log*
+.vite/

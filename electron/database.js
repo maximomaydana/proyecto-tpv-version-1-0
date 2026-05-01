@@ -120,6 +120,73 @@ export function createProduct(product) {
   }
 }
 
+export function updateProduct(product) {
+  if (!product.id) {
+    throw new Error('Producto inválido')
+  }
+
+  const existingProduct = db.prepare(`
+    SELECT *
+    FROM products
+    WHERE id = ? AND active = 1
+  `).get(product.id)
+
+  if (!existingProduct) {
+    throw new Error('Producto no encontrado')
+  }
+
+  db.prepare(`
+    UPDATE products
+    SET
+      name = ?,
+      barcode = ?,
+      category = ?,
+      purchase_price = ?,
+      sale_price = ?,
+      stock = ?,
+      min_stock = ?
+    WHERE id = ?
+  `).run(
+    product.name,
+    product.barcode || '',
+    product.category || '',
+    Number(product.purchase_price || 0),
+    Number(product.sale_price || 0),
+    Number(product.stock || 0),
+    Number(product.min_stock || 0),
+    product.id
+  )
+
+  return db.prepare(`
+    SELECT *
+    FROM products
+    WHERE id = ?
+  `).get(product.id)
+}
+
+export function deactivateProduct(productId) {
+  const existingProduct = db.prepare(`
+    SELECT *
+    FROM products
+    WHERE id = ? AND active = 1
+  `).get(productId)
+
+  if (!existingProduct) {
+    throw new Error('Producto no encontrado')
+  }
+
+  db.prepare(`
+    UPDATE products
+    SET active = 0
+    WHERE id = ?
+  `).run(productId)
+
+  return {
+    id: productId,
+    active: 0
+  }
+}
+
 export function getOpenCashSession() {
   return db.prepare(`
     SELECT *
@@ -157,6 +224,7 @@ export function getCashSummary() {
         efectivo: 0,
         transferencia: 0,
         tarjeta: 0,
+        mercado_pago: 0,
         total_sales: 0,
         ingresos: 0,
         egresos: 0,
@@ -175,7 +243,8 @@ export function getCashSummary() {
   const totalsByPayment = {
     efectivo: 0,
     transferencia: 0,
-    tarjeta: 0
+    tarjeta: 0,
+    mercado_pago: 0
   }
 
   for (const row of paymentRows) {
@@ -211,10 +280,12 @@ export function getCashSummary() {
       efectivo: Number(totalsByPayment.efectivo || 0),
       transferencia: Number(totalsByPayment.transferencia || 0),
       tarjeta: Number(totalsByPayment.tarjeta || 0),
+      mercado_pago: Number(totalsByPayment.mercado_pago || 0),
       total_sales:
         Number(totalsByPayment.efectivo || 0) +
         Number(totalsByPayment.transferencia || 0) +
-        Number(totalsByPayment.tarjeta || 0),
+        Number(totalsByPayment.tarjeta || 0) +
+        Number(totalsByPayment.mercado_pago || 0),
       ingresos,
       egresos,
       expected_amount: expectedAmount
